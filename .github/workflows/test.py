@@ -32,10 +32,10 @@ def calculate_fid(img1, img2):
     return fid
 
 # Load your images (replace with your paths or image loading method)
-real_image = tf.keras.preprocessing.image.load_img('real.png', target_size=(299, 299))
+real_image = tf.keras.preprocessing.image.load_img('./real.png', target_size=(299, 299))
 real_image = np.array(real_image)
 
-generated_image = tf.keras.preprocessing.image.load_img('test.png', target_size=(299, 299))
+generated_image = tf.keras.preprocessing.image.load_img('./test.png', target_size=(299, 299))
 generated_image = np.array(generated_image)
 
 # Images should be in the shape (N, 299, 299, 3), so we need to expand dimensions
