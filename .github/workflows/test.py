@@ -1,63 +1,50 @@
-import requests
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input
 
+# Load InceptionV3 model pre-trained on ImageNet data and exclude top classification layer
+model = InceptionV3(include_top=False, pooling='avg', input_shape=(299, 299, 3))
 
-def check_image(image_url, api_key):
-    endpoint = "https://v3-atrium-prod-api.optic.xyz/aion/ai-generated/reports"
+def calculate_fid(img1, img2):
+    # Ensure images are of the shape (299, 299, 3)
+    img1 = tf.image.resize(img1, (299, 299))
+    img2 = tf.image.resize(img2, (299, 299))
 
-    headers = {
-        "X-API-KEY": api_key,
-        "Content-Type": "application/json"
-    }
+    # Preprocess images (scaling and other operations)
+    img1 = preprocess_input(img1)
+    img2 = preprocess_input(img2)
 
-    payload = {
-        "object": image_url
-    }
+    print("Preprecessing images")
 
-    response = requests.post(endpoint, headers=headers, json=payload)
+    # Calculate activations
+    act1 = model(img1)
+    act2 = model(img2)
 
-    if response.status_code == 200:
-        data = response.json()
-        report = data.get('report', {})
+    # Calculate mean and variance statistics
+    mu1, sigma1_sq = act1.numpy().mean(), act1.numpy().var()
+    mu2, sigma2_sq = act2.numpy().mean(), act2.numpy().var()
 
-        # Print the confidence scores
-        print("AI Confidence:", report.get('ai', {}).get('confidence'))
-        print("Human Confidence:", report.get('human', {}).get('confidence'))
-        return report.get('ai', {}).get('confidence')
+    # Calculate sum squared difference between means
+    ssdiff = np.sum((mu1 - mu2)**2.0)
 
-    else:
-        print("Error:", response.status_code, response.text)
+    fid = ssdiff + sigma1_sq + sigma2_sq - 2.0 * np.sqrt(sigma1_sq * sigma2_sq)
 
+    return fid
 
-def get_image_report(image_url, api_key):
-    endpoint = "https://v3-atrium-prod-api.optic.xyz/aion/ai-generated/reports"
+# Load your images (replace with your paths or image loading method)
+real_image = tf.keras.preprocessing.image.load_img('real.png', target_size=(299, 299))
+real_image = np.array(real_image)
 
-    headers = {
-        "X-API-KEY": api_key,
-        "Content-Type": "application/json"
-    }
+generated_image = tf.keras.preprocessing.image.load_img('test.png', target_size=(299, 299))
+generated_image = np.array(generated_image)
 
-    payload = {
-        "object": image_url
-    }
+# Images should be in the shape (N, 299, 299, 3), so we need to expand dimensions
+real_image = np.expand_dims(real_image, axis=0)
+generated_image = np.expand_dims(generated_image, axis=0)
 
-    response = requests.post(endpoint, headers=headers, json=payload)
+# Calculate FID
+print("Calculating fid")
+fid_value = calculate_fid(real_image, generated_image)
+print(f"FID: {fid_value}")
 
-    if response.status_code == 200:
-        return response.json().get('report', {})
-    else:
-        raise ValueError(f"API Error: {response.status_code} - {response.text}")
-
-
-def is_generated_by_human(report):
-    human_confidence = report.get('human', {}).get('confidence', 0)
-    return human_confidence > 0.8
-
-
-
-if __name__ == "__main__":
-    api_key = input("mem_clnw7cbph28ar0s2xbmhe4eeh").strip()
-    image_url = input("test.png").strip()
-
-    score = check_image(image_url, api_key)
-
-    assert (score >= 0.7) == True, "Failed to detect human-generated image"
+assert fid_value<0.01 == True;
