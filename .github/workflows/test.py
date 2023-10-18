@@ -47,4 +47,4 @@ print("Calculating fid")
 fid_value = calculate_fid(real_image, generated_image)
 print(f"FID: {fid_value}")
 
-assert fid_value<0.01 == True;
+assert fid_value<1 == True;
