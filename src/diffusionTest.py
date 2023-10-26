@@ -17,10 +17,10 @@ def create_clean_cross(size=64, thickness=4):
 def diffuse_image(image, noise_level=0.5):
     return image * (1 - noise_level) + torch.randn_like(image) * noise_level
 
-# Function to add noise to an image at multiple levels
-def diffuse_image_levels(image, levels):
+# Function to add noise to an image at multiple levels, starting from 0% noise
+def diffuse_image_levels_modified(image, levels):
     noise_levels = np.linspace(0, 1, levels)
-    return [diffuse_image(image, noise_level) for noise_level in noise_levels]
+    return [diffuse_image(image, noise_level) for noise_level in reversed(noise_levels)]
 
 # Function to reconstruct an image step-by-step using the model
 def reconstruct_image_stepwise(model, diffused_image_levels):
@@ -55,17 +55,17 @@ num_samples = 25
 X_train_clean = np.array([create_clean_cross() for _ in range(num_samples)])
 X_train_clean = torch.tensor(X_train_clean, dtype=torch.float32).unsqueeze(1)
 
-# Generate diffused images at different levels (4 levels in one of the steps)
-levels = 1  # Changed based on steps
-diffused_images_levels = [diffuse_image_levels(img, levels) for img in X_train_clean]
+# Generate diffused images at different levels (2 levels for this example: 0% and 100%)
+levels = 2  
+diffused_images_levels = [diffuse_image_levels_modified(img, levels) for img in X_train_clean]
 diffused_images_levels = torch.cat([torch.stack(level) for level in zip(*diffused_images_levels)], dim=0)
 
 # Initialize the neural network and optimizer
 model = StepwiseReverseDiffusionNet()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# Training loop
-epochs = 2  # Changed based on steps
+# Training loop with 25 epochs
+epochs = 25
 losses = []
 for epoch in range(epochs):
     for i in range(num_samples * levels):
@@ -76,4 +76,27 @@ for epoch in range(epochs):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        losses.append(loss.item())
+    print(f"Epoch [{epoch+1}/{epochs}], Loss: {loss.item():.4f}")
+    losses.append(loss.item())
+
+# Generate 5 noise samples for inference
+noise_samples = [torch.randn_like(X_train_clean[0]) for _ in range(5)]
+
+# Inference: Reconstruct images from noise samples
+reconstructed_images = []
+for noise_sample in noise_samples:
+    diffused_image_levels_sample = [noise_sample.unsqueeze(0)]  # Add batch dimension
+    for _ in range(levels - 1):  # Generate diffused levels
+        diffused_image_levels_sample.append(model(diffused_image_levels_sample[-1]).detach())
+    reconstructed_image = reconstruct_image_stepwise(model, diffused_image_levels_sample)
+    reconstructed_images.append(reconstructed_image)
+
+# Show reconstructed images for the 5 noise samples
+fig, axs = plt.subplots(1, 5, figsize=(15, 5))
+
+for i, reconstructed_image in enumerate(reconstructed_images):
+    axs[i].imshow(reconstructed_image[0, 0], cmap='gray')  # Removed the batch dimension for plotting
+    axs[i].set_title(f'Reconstructed {i+1}')
+    axs[i].axis('off')
+
+plt.show()
