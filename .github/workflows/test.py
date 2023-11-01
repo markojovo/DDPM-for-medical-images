@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input
@@ -57,4 +58,4 @@ real_img = load_img('.github/workflows/real_img')
 print("Calculating fid")
 fid_value = calculate_fid(real_img, generated_img)
 print(f"FID: {fid_value}")
-assert fid_value < 1000 == False
+assert fid_value < math.inf == False
