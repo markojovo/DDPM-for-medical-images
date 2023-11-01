@@ -51,12 +51,11 @@ def calculate_fid(img1, img2):  # Ensure images are of the shape (299, 299, 3)
     return fid
 
 
-generated_img = load_img('.github/workflows/generated_img')
-real_img = load_img('.github/workflows/real_img')
-# Calculate FID
-print("Calculating fid")
-fid_value = calculate_fid(real_img, generated_img)
-print(f"FID: {fid_value}")
-
-def test_fid(fid_value):
+def test_fid():
+    generated_img = load_img('.github/workflows/generated_img')
+    real_img = load_img('.github/workflows/real_img')
+    # Calculate FID
+    print("Calculating fid")
+    fid_value = calculate_fid(real_img, generated_img)
+    print(f"FID: {fid_value}")
     assert (fid_value < math.inf) == True
