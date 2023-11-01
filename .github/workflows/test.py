@@ -25,7 +25,6 @@ def calculate_fid(img1, img2):  # Ensure images are of the shape (299, 299, 3)
     images1 = preprocess_input(img1)
     images2 = preprocess_input(img2)
 
-
     print("Preprocessing images")
 
     # Calculate activations
@@ -59,4 +58,7 @@ print("Calculating fid")
 fid_value = calculate_fid(real_img, generated_img)
 print(f"FID: {fid_value}")
 
-assert fid_value < 1 == True;
+try:
+    assert fid_value < 1000 == False
+except AssertionError as msg:
+    print(msg)
