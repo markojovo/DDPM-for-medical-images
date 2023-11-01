@@ -50,8 +50,8 @@ def calculate_fid(img1, img2):  # Ensure images are of the shape (299, 299, 3)
     return fid
 
 
-generated_img = load_img('generated_img')
-real_img = load_img('real_img')
+generated_img = load_img('.github/workflows/generated_img')
+real_img = load_img('.github/workflows/real_img')
 
 # Calculate FID
 print("Calculating fid")
