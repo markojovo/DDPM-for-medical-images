@@ -1,4 +1,4 @@
-numpy==1.21.2
+numpy==1.26.1
 flake8==3.9.2
 pytest==6.2.5
 scipy==1.11.3
