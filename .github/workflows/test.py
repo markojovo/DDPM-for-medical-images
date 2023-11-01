@@ -57,4 +57,6 @@ real_img = load_img('.github/workflows/real_img')
 print("Calculating fid")
 fid_value = calculate_fid(real_img, generated_img)
 print(f"FID: {fid_value}")
-assert (fid_value < math.inf) == True
+
+def test_fid(fid_value):
+    assert (fid_value < math.inf) == True
