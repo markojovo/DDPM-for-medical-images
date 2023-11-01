@@ -57,8 +57,4 @@ real_img = load_img('.github/workflows/real_img')
 print("Calculating fid")
 fid_value = calculate_fid(real_img, generated_img)
 print(f"FID: {fid_value}")
-
-try:
-    assert fid_value < 1000 == False
-except AssertionError as msg:
-    print(msg)
+assert fid_value < 1000 == False
