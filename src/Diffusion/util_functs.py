@@ -1,5 +1,8 @@
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
+import os
+import shutil
 
 def create_clean_multi_cross(size=128, thickness=6):
     """
@@ -70,9 +73,31 @@ def reconstruct_image_iteratively(model, initial_noisy_image, num_iterations):
     num_iterations (int): Number of iterations to perform.
 
     Returns:
-    torch.Tensor: The reconstructed image.
+    torch.Tensor: The reconstructed image (with the batch dimension).
     """
     reconstructed_image = initial_noisy_image.unsqueeze(0)  
     for _ in range(num_iterations):
         reconstructed_image = model(reconstructed_image)
-    return reconstructed_image.squeeze(0)
+    return reconstructed_image  # Keep the batch dimension
+
+def clear_and_create_directory(directory):
+   try:
+     files = os.listdir(directory)
+     for file in files:
+       file_path = os.path.join(directory, file)
+       if os.path.isfile(file_path):
+         os.remove(file_path)
+     print("All previous epoch images cleared successfully.")
+   except OSError:
+     print("Error occurred while deleting epoch images.")
+
+
+def save_reconstructed_images(epoch, reconstructed_images):
+    plt.figure(figsize=(15, 3))
+    for i, img in enumerate(reconstructed_images, 1):
+        plt.subplot(1, 5, i)
+        plt.imshow(img.squeeze(0), cmap='gray')
+        plt.axis('off')
+    plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}')
+    plt.savefig(f'./training_plots/epoch_{epoch+1}.png')
+    plt.close()
