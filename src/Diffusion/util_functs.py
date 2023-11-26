@@ -4,6 +4,23 @@ import matplotlib.pyplot as plt
 import os
 import shutil
 
+
+def cosine_scaled_noise_level(noise_level):
+    """
+    Function to scale a noise level using a cosine pattern.
+    
+    Args:
+    noise_level (int): The noise level, between 0 and 999.
+    
+    Returns:
+    float: The cosine-scaled noise level.
+    """
+    
+    # Calculate the cosine-scaled noise level
+    cosine_scaled = (np.cos(np.pi + np.pi * float(noise_level) / 999) + 1) / 2
+    
+    return cosine_scaled
+
 def create_clean_multi_cross(size=128, thickness=6):
     """
     Function to create a clean pattern with multiple crosses and reduced thickness.
@@ -76,8 +93,8 @@ def diffuse_image_levels_cosine(image, levels):
     Returns:
     List[torch.Tensor]: List of images with noise levels following a cosine pattern.
     """
-    # Creating a cosine wave pattern normalized between 0 and 1
-    noise_levels = (np.cos(np.linspace(0, np.pi, levels)) + 1) / 2
+    # Creating an inverted cosine wave pattern normalized between 0 and 1
+    noise_levels = (np.cos(np.linspace(np.pi, 2 * np.pi, levels)) + 1) / 2
     return [diffuse_image(image, noise_level) for noise_level in noise_levels]
 
 def diffuse_image_levels_sigmoid(image, levels, k=0.1, offset=0.5):
@@ -109,7 +126,9 @@ def reconstruct_image_iteratively(model, initial_noisy_image, num_iterations):
     reconstructed_image = initial_noisy_image.unsqueeze(0)  # Add batch dimension
     for i in range(num_iterations):
         # Calculate the current noise level
-        current_noise_level = (1000 - i) / 1000
+        #current_noise_level = (1000 - i) / 1000
+        current_noise_level = cosine_scaled_noise_level(999 - i)
+
         # Convert to a tensor and add necessary dimensions (batch and channel)
         noise_level_tensor = torch.tensor([current_noise_level], dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(reconstructed_image.device)
         # Forward pass with the current noise level
@@ -128,12 +147,15 @@ def clear_and_create_directory(directory):
      print("Error occurred while deleting epoch images.")
 
 
-def save_reconstructed_images(epoch, reconstructed_images):
+def save_reconstructed_images(epoch, batch_idx, reconstructed_images):
     plt.figure(figsize=(15, 3))
     for i, img in enumerate(reconstructed_images, 1):
         plt.subplot(1, 5, i)
         plt.imshow(img.squeeze(0), cmap='gray')
         plt.axis('off')
     plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}')
-    plt.savefig(f'./training_plots/epoch_{epoch+1}.png')
+    plt.savefig(f'./training_plots/epoch{epoch+1}_batch_{batch_idx}.png')
     plt.close()
+
+
+

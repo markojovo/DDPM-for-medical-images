@@ -3,6 +3,7 @@ from PIL import Image
 import os
 import torch
 import torchvision.transforms as transforms
+from util_functs import cosine_scaled_noise_level
 
 class DiffusionDataset(Dataset):
     def __init__(self, directory, transform=None, num_images=None):
@@ -23,7 +24,8 @@ class DiffusionDataset(Dataset):
                 target_image_path = os.path.join(folder, image_files[i])
                 
                 # Extract the noise level from the filename (e.g., '000.jpg' -> 0.0)
-                noise_level = float(image_files[i + 1].split('.')[0]) / 1000
+                #noise_level = float(image_files[i + 1].split('.')[0]) / 1000
+                noise_level = cosine_scaled_noise_level(image_files[i + 1].split('.')[0])
                 
                 # Store the paths and noise level
                 self.images_info.append((input_image_path, target_image_path, noise_level))

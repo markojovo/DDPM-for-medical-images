@@ -24,13 +24,13 @@ def main():
         print("Loaded saved model weights.")
 
     # Initialize custom dataset and DataLoader
-    train_dataset = DiffusionDataset("../data/diffused_train/", num_images=1, transform=transforms.ToTensor())
-    train_loader = DataLoader(dataset=train_dataset, batch_size=320, shuffle=True)
+    train_dataset = DiffusionDataset("../data/diffused_train/", num_images=100, transform=transforms.ToTensor())
+    train_loader = DataLoader(dataset=train_dataset, batch_size=320, num_workers = 8, shuffle=True)
 
     # Training loop
     epoch_losses = []
     total_epochs = 70
-    save_interval = 1
+    save_interval = 250
     print("Starting training...")
     clear_and_create_directory("./training_plots/")
 
@@ -40,7 +40,7 @@ def main():
         num_batches = 0
 
         for batch_idx, (input_image, noise_levels, target_image) in enumerate(train_loader):
-            print(f"  Processing batch {batch_idx + 1}/{len(train_loader)}...")
+            print(f"  Processing batch {batch_idx + 1}/{len(train_loader)}... ",end='')
             input_image, noise_levels, target_image = input_image.to(device), noise_levels.to(device), target_image.to(device)
 
             # Forward pass with noise level
@@ -52,6 +52,7 @@ def main():
             loss.backward()
             optimizer.step()
 
+            print(f"Batch loss: {loss.item()}...")
             epoch_loss_sum += loss.item()
             num_batches += 1
 
@@ -59,19 +60,20 @@ def main():
             epoch_avg_loss = epoch_loss_sum / num_batches
             epoch_losses.append(epoch_avg_loss)
 
+            if (batch_idx % save_interval == 0):
+                initial_noisy_images = torch.randn(5, 1, 128, 128).to(device)
+                reconstructed_images = [reconstruct_image_iteratively(model, initial_noisy_image, 150).cpu().detach().numpy().squeeze(0) for initial_noisy_image in initial_noisy_images] # changed to 15 for testing
+
+                save_reconstructed_images(epoch, batch_idx, reconstructed_images)
+
+                # Save the model after every epoch
+                torch.save(model.state_dict(), f'diffusion_model.pth')
+                print(f"Model saved for Epoch {epoch+1}, batch {batch_idx}")
+
 
         print(f"Epoch {epoch + 1}/{total_epochs} completed, Average Loss: {epoch_avg_loss:.4f}")
 
 
-        if (epoch % save_interval == 0):
-            initial_noisy_images = torch.randn(5, 1, 128, 128).to(device)
-            reconstructed_images = [reconstruct_image_iteratively(model, initial_noisy_image, 150).cpu().detach().numpy().squeeze(0) for initial_noisy_image in initial_noisy_images] # changed to 15 for testing
-
-            save_reconstructed_images(epoch, reconstructed_images)
-
-            # Save the model after every epoch
-            torch.save(model.state_dict(), f'diffusion_model.pth')
-            print(f"Model saved for Epoch {epoch+1}")
 
 
     print("Training completed.")
