@@ -1,47 +1,51 @@
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 import os
+import torch
 import torchvision.transforms as transforms
 
 class DiffusionDataset(Dataset):
     def __init__(self, directory, transform=None, num_images=None):
-        self.total = 0
         self.directory = directory
         self.transform = transform if transform else transforms.ToTensor()
 
-        # List all subfolders and optionally limit the number
-        all_folders = [os.path.join(directory, f) for f in os.listdir(directory) if os.path.isdir(os.path.join(directory, f))]
-        self.image_folders = all_folders if num_images is None else all_folders[:num_images]
+        # List all image folders and optionally limit the number
+        self.image_folders = [os.path.join(directory, f) for f in sorted(os.listdir(directory)) if os.path.isdir(os.path.join(directory, f))]
+        if num_images is not None:
+            self.image_folders = self.image_folders[:num_images]
 
-        # Precompute the cumulative number of pairs in each folder
-        self.cumulative_pairs = []
+        self.images_info = []
+
         for folder in self.image_folders:
-            num_pairs = len(os.listdir(folder)) - 1
-            self.total += num_pairs
-            self.cumulative_pairs.append(self.total)
+            image_files = sorted(os.listdir(folder))
+            for i in range(len(image_files) - 1):
+                input_image_path = os.path.join(folder, image_files[i + 1])
+                target_image_path = os.path.join(folder, image_files[i])
+                
+                # Extract the noise level from the filename (e.g., '000.jpg' -> 0.0)
+                noise_level = float(image_files[i + 1].split('.')[0]) / 1000
+                
+                # Store the paths and noise level
+                self.images_info.append((input_image_path, target_image_path, noise_level))
 
     def __len__(self):
-        return self.total
+        return len(self.images_info)
 
     def __getitem__(self, idx):
-        # Find the folder that contains the image for this idx
-        folder_idx = next(i for i, total in enumerate(self.cumulative_pairs) if total > idx)
-        image_idx = idx - (self.cumulative_pairs[folder_idx - 1] if folder_idx > 0 else 0)
+        input_image_path, target_image_path, noise_level = self.images_info[idx]
+        
+        # Load the images on demand
+        input_image = Image.open(input_image_path).convert('L')  # Convert to grayscale
+        target_image = Image.open(target_image_path).convert('L')  # Convert to grayscale
 
-        folder_path = self.image_folders[folder_idx]
-        input_image_path = os.path.join(folder_path, f"{str(image_idx + 1).zfill(3)}.jpg")
-        target_image_path = os.path.join(folder_path, f"{str(image_idx).zfill(3)}.jpg")
-
-        input_image = Image.open(input_image_path).convert('L')
-        target_image = Image.open(target_image_path).convert('L')
-
+        # Apply the transform if any
         if self.transform:
             input_image = self.transform(input_image)
             target_image = self.transform(target_image)
 
-        return input_image, target_image
+        # Return the input image, noise level, and target image
+        return input_image, torch.tensor([noise_level], dtype=torch.float32), target_image
 
-
-# Example usage with limited number of images
-# dataset = DiffusionDataset("../data/diffused_train/", transform=transforms.ToTensor(), num_images=10)
+# Example usage
+# dataset = DiffusionDataset("../data/diffused_train/", transform=transforms.ToTensor())
 # dataloader = DataLoader(dataset, batch_size=32, shuffle=True)

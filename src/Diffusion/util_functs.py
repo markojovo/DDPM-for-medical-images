@@ -49,6 +49,37 @@ def diffuse_image_levels_linear(image, levels):
     noise_levels = np.linspace(0, 1, levels)
     return [diffuse_image(image, noise_level) for noise_level in noise_levels]
 
+def diffuse_image_levels_exponential(image, levels):
+    """
+    Function to add noise to an image at multiple exponential levels.
+    Args:
+    image (torch.Tensor): The image to add noise to.
+    levels (int): Number of levels of noise to add.
+
+    Returns:
+    List[torch.Tensor]: List of images with increasing levels of noise.
+    """
+    # Create an array where the last level is exactly 1, and the progression towards it is exponential
+    noise_levels = np.logspace(0, 1, num=levels, base=10) - 1
+    # Normalize so that the maximum noise level is exactly 1
+    noise_levels /= np.max(noise_levels)
+    return [diffuse_image(image, noise_level) for noise_level in noise_levels]
+
+
+def diffuse_image_levels_cosine(image, levels):
+    """
+    Function to add noise to an image at multiple cosine levels.
+    Args:
+    image (torch.Tensor): The image to add noise to.
+    levels (int): Number of levels of noise to add.
+
+    Returns:
+    List[torch.Tensor]: List of images with noise levels following a cosine pattern.
+    """
+    # Creating a cosine wave pattern normalized between 0 and 1
+    noise_levels = (np.cos(np.linspace(0, np.pi, levels)) + 1) / 2
+    return [diffuse_image(image, noise_level) for noise_level in noise_levels]
+
 def diffuse_image_levels_sigmoid(image, levels, k=0.1, offset=0.5):
     """
     Function to add noise to an image at multiple sigmoidal levels.
@@ -66,19 +97,24 @@ def diffuse_image_levels_sigmoid(image, levels, k=0.1, offset=0.5):
 
 def reconstruct_image_iteratively(model, initial_noisy_image, num_iterations):
     """
-    Function to reconstruct an image iteratively using a given model.
+    Function to reconstruct an image iteratively using a given model, with decreasing noise level.
     Args:
-    model (torch.nn.Module): The neural network model to use for reconstruction.
-    initial_noisy_image (torch.Tensor): The initial noisy image to start with.
-    num_iterations (int): Number of iterations to perform.
+        model (torch.nn.Module): The neural network model to use for reconstruction.
+        initial_noisy_image (torch.Tensor): The initial noisy image to start with.
+        num_iterations (int): Number of iterations to perform.
 
     Returns:
-    torch.Tensor: The reconstructed image (with the batch dimension).
+        torch.Tensor: The reconstructed image (with the batch dimension).
     """
-    reconstructed_image = initial_noisy_image.unsqueeze(0)  
-    for _ in range(num_iterations):
-        reconstructed_image = model(reconstructed_image)
-    return reconstructed_image  # Keep the batch dimension
+    reconstructed_image = initial_noisy_image.unsqueeze(0)  # Add batch dimension
+    for i in range(num_iterations):
+        # Calculate the current noise level
+        current_noise_level = (1000 - i) / 1000
+        # Convert to a tensor and add necessary dimensions (batch and channel)
+        noise_level_tensor = torch.tensor([current_noise_level], dtype=torch.float32).unsqueeze(0).unsqueeze(0).to(reconstructed_image.device)
+        # Forward pass with the current noise level
+        reconstructed_image = model(reconstructed_image, noise_level_tensor)
+    return reconstructed_image
 
 def clear_and_create_directory(directory):
    try:

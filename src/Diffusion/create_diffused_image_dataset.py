@@ -1,7 +1,7 @@
 import os
 import torch
 from PIL import Image
-from util_functs import diffuse_image_levels_linear
+from util_functs import diffuse_image_levels_cosine
 import torchvision.transforms as transforms
 from multiprocessing import Pool
 
@@ -16,10 +16,19 @@ def process_image(image_file, source_folder, target_folder):
     image_path = os.path.join(source_folder, image_file)
     image = Image.open(image_path).convert('L')  # Convert to grayscale
     image = image.resize((128, 128))
-    image_tensor = transforms.ToTensor()(image)
+
+
+    # Normalize the image
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        #transforms.Normalize(mean=[0], std=[1.5])  # Normalizing
+        
+    ])
+    image_tensor = transform(image)
+
 
     # Generate diffused images
-    diffused_images = diffuse_image_levels_linear(image_tensor, 1000)
+    diffused_images = diffuse_image_levels_cosine(image_tensor, 1000)
 
     # Save diffused images
     for level, diffused_image in enumerate(diffused_images):
