@@ -140,6 +140,7 @@ def test_fid():
     fid_value = calculate_fid(real_img, generated_img)
     print(f"FID: {fid_value}")
     assert (fid_value < math.inf) == True
+    return fid_value
 
 # def test_is():
 #     generated_img = load_img('.github/workflow/generated_img')
@@ -156,6 +157,7 @@ def test_fds():
     fds_value = calculate_fds(real_img, generated_img)
     print(f"FDS: {fds_value}")
     assert fds_value.all() >= 0
+    return fds_value
 
 def test_ds():
     generated_img = load_img('.github/workflows/generated_img')
@@ -167,7 +169,42 @@ def test_ds():
     ds_value = calculate_diversity_score(generated_img, real_img, num_comparisons)
     print(f"DS: {ds_value}")
     assert ds_value >= 0
+    return ds_value
 
 test_fid()
 test_fds()
 test_ds()
+
+fid_value = test_fid()
+fds_value = test_fds()
+ds_value = test_ds()
+
+report_template = """
+Inception Score (IS):
+- Value: {is_value}
+- Purpose: Evaluates the quality and diversity of synthetic images.
+- Method: Measures how well the synthetic images can be classified into known categories by an Inception model.
+- Interpretation: Higher IS indicates better image quality and diversity.
+
+Fréchet Inception Distance (FID) Score:
+- Value: {fid_value}
+- Purpose: Assesses the similarity of synthetic and real image distributions.
+- Method: Compares the feature distributions of synthetic and real images using an Inception model.
+- Interpretation: Lower FID suggests closer resemblance to real images, indicating better quality.
+
+Feature Distribution Similarity (FDS):
+- Value: {fds_value}
+- Purpose: Analyzes the similarity between the distributions of real and synthetic images.
+- Method: Uses t-distributed stochastic neighbor embedding (T-SNE) to reduce image dimensions, then fits Gaussian models to these features for both real and synthetic images. The similarity is measured using Kullback–Leibler divergence.
+- Interpretation: Smaller KL divergence values indicate more similar distributions, implying higher quality.
+
+Diversity Score (DS):
+- Value: {ds_value}
+- Purpose: Evaluates the diversity of the synthetic images.
+- Method: Calculates Structural Similarity Index Measure (SSIM) between each synthetic image and its most similar pair within the synthetic dataset. The diversity score is then determined by comparing the distribution of these nearest SSIMs for synthetic and real images, using KL divergence.
+- Interpretation: A lower DS suggests that the synthetic images have similar diversity to the real images, indicating good diversity representation.
+""".format(fid_value=fid_value, fds_value=fds_value, ds_value=ds_value)
+
+
+with open("evaluation_report.txt", "w") as file:
+    file.write(report_template)
