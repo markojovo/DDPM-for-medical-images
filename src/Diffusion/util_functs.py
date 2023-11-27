@@ -147,13 +147,16 @@ def clear_and_create_directory(directory):
      print("Error occurred while deleting epoch images.")
 
 
-def save_reconstructed_images(epoch, batch_idx, reconstructed_images):
+def save_reconstructed_images(epoch, batch_idx, reconstructed_images, lrate=None):
     plt.figure(figsize=(15, 3))
     for i, img in enumerate(reconstructed_images, 1):
         plt.subplot(1, 5, i)
         plt.imshow(img.squeeze(0), cmap='gray')
         plt.axis('off')
-    plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}')
+    if lrate is not None:
+        plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}, Batch {batch_idx} and LR = {lrate}')
+    else:
+        plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}, Batch {batch_idx}')
     plt.savefig(f'./training_plots/epoch{epoch+1}_batch_{batch_idx}.png')
     plt.close()
 
