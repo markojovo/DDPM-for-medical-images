@@ -104,14 +104,13 @@ from skimage.metrics import structural_similarity as ssim
 
 
 def calculate_diversity_score(images, images2, num_comparisons):
-    # Convert images to grayscale for SSIM calculation
     images_gray = np.dot(images[..., :3], [0.2989, 0.5870, 0.1140])
     images2_gray = np.dot(images2[..., :3], [0.2989, 0.5870, 0.1140])
 
     ssim_values = []
     for i in range(num_comparisons):
         idx1, idx2 = np.random.choice(images_gray.shape[0], 2, replace=False)
-        score, _ = ssim(images_gray[idx1], images_gray[idx2], full=True, channel_axis=-1)
+        score, _ = ssim(images_gray[idx1], images_gray[idx2], full=True, channel_axis=-1, data_range=images_gray.max() - images_gray.min())
         ssim_values.append(score)
 
     real_ssim_values = calculate_ssim_distribution(images2_gray, num_comparisons)
@@ -121,20 +120,18 @@ def calculate_diversity_score(images, images2, num_comparisons):
     return ds
 
 
+
 from skimage.metrics import structural_similarity as ssim
 
 def calculate_ssim_distribution(images, num_comparisons):
     ssim_scores = []
-    num_images = len(images)
-    if num_images < 2:
-        raise ValueError("Need at least two images to calculate SSIM distribution")
-
-    for _ in range(num_comparisons):
-        i, j = np.random.choice(range(num_images), 2, replace=False)
-        score = ssim(images[i], images[j], channel_axis=-1)
+    for i in range(num_comparisons):
+        idx1, idx2 = np.random.choice(images.shape[0], 2, replace=False)
+        score = ssim(images[idx1], images[idx2], channel_axis=-1, data_range=images.max() - images.min())
         ssim_scores.append(score)
-
     return ssim_scores
+
+
 def test_fid():
     generated_img = load_img('.github/workflows/generated_img')
     real_img = load_img('.github/workflows/real_img')
