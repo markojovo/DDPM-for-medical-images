@@ -180,12 +180,6 @@ fds_value = test_fds()
 ds_value = test_ds()
 
 report_template = """
-Inception Score (IS):
-- Value: {is_value}
-- Purpose: Evaluates the quality and diversity of synthetic images.
-- Method: Measures how well the synthetic images can be classified into known categories by an Inception model.
-- Interpretation: Higher IS indicates better image quality and diversity.
-
 Fréchet Inception Distance (FID) Score:
 - Value: {fid_value}
 - Purpose: Assesses the similarity of synthetic and real image distributions.
