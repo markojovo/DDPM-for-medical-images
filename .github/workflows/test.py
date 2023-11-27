@@ -136,8 +136,8 @@ def calculate_ssim_distribution(images, num_comparisons):
 
     return ssim_scores
 def test_fid():
-    generated_img = load_img('.github/workflow/generated_img')
-    real_img = load_img('.github/workflow/real_img')
+    generated_img = load_img('.github/workflows/generated_img')
+    real_img = load_img('.github/workflows/real_img')
     # Calculate FID
     print("Calculating fid")
     fid_value = calculate_fid(real_img, generated_img)
@@ -153,16 +153,16 @@ def test_fid():
 #     assert is_mean > 0
 
 def test_fds():
-    generated_img = load_img('.github/workflow/generated_img')
-    real_img = load_img('.github/workflow/real_img')
+    generated_img = load_img('.github/workflows/generated_img')
+    real_img = load_img('.github/workflows/real_img')
     print("Calculating FDS")
     fds_value = calculate_fds(real_img, generated_img)
     print(f"FDS: {fds_value}")
     assert fds_value.all() >= 0
 
 def test_ds():
-    generated_img = load_img('.github/workflow/generated_img')
-    real_img = load_img('.github/workflow/real_img')
+    generated_img = load_img('.github/workflows/generated_img')
+    real_img = load_img('.github/workflows/real_img')
 
     num_comparisons = min(len(generated_img), len(real_img)) * (min(len(generated_img), len(real_img)) - 1) // 2
 
