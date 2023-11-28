@@ -7,7 +7,7 @@ import shutil
 
 def cosine_scaled_noise_level(noise_level):
     """
-    Function to scale a noise level using a cosine pattern.
+    Function to scale a noise level using a cosine pattern based on a specific scale law, inverted to go from 0 to 1.
     
     Args:
     noise_level (int): The noise level, between 0 and 999.
@@ -15,11 +15,20 @@ def cosine_scaled_noise_level(noise_level):
     Returns:
     float: The cosine-scaled noise level.
     """
-    
-    # Calculate the cosine-scaled noise level
-    cosine_scaled = (np.cos(np.pi + np.pi * float(noise_level) / 999) + 1) / 2
-    
-    return cosine_scaled
+    # Set the values for s, e, and tau according to the desired curve
+    s, e, tau = 0.2, 1.0, 1  # Example values, adjust as needed
+
+    # Calculate the cosine-scaled noise level according to the schedule
+    v_start = np.cos(s * np.pi / 2) ** (2 * tau)
+    v_end = np.cos(e * np.pi / 2) ** (2 * tau)
+    t = (999 - noise_level) / 999  # Normalize noise level to [0, 1]
+    output = np.cos((t * (e - s) + s) * np.pi / 2) ** (2 * tau)
+    output = (output - v_start) / (v_end - v_start)
+
+    return np.clip(output, 0, 1)  # Clipping the output to be within [0, 1]
+
+
+
 
 def create_clean_multi_cross(size=128, thickness=6):
     """
@@ -85,7 +94,7 @@ def diffuse_image_levels_exponential(image, levels):
 
 def diffuse_image_levels_cosine(image, levels):
     """
-    Function to add noise to an image at multiple cosine levels.
+    Function to add noise to an image at multiple cosine levels based on a specific scale law.
     Args:
     image (torch.Tensor): The image to add noise to.
     levels (int): Number of levels of noise to add.
@@ -93,9 +102,20 @@ def diffuse_image_levels_cosine(image, levels):
     Returns:
     List[torch.Tensor]: List of images with noise levels following a cosine pattern.
     """
-    # Creating an inverted cosine wave pattern normalized between 0 and 1
-    noise_levels = (np.cos(np.linspace(np.pi, 2 * np.pi, levels)) + 1) / 2
+    # Set the values for s, e, and tau according to the desired curve
+    s, e, tau = 0.2, 1.0, 1  # Example values, adjust as needed
+
+    # Flip the ts variable
+    ts = (999 - np.linspace(0, 999, levels)) / 999  # Normalize flipped noise levels to [0, 1]
+
+    # Calculate the cosine-scaled noise levels according to the schedule
+    v_start = np.cos(s * np.pi / 2) ** (2 * tau)
+    v_end = np.cos(e * np.pi / 2) ** (2 * tau)
+    noise_levels = [(v_end - np.cos((t * (e - s) + s) * np.pi / 2) ** (2 * tau)) / (v_end - v_start) for t in ts]
+
+    # Assuming diffuse_image is a function that takes an image and a noise level and returns the diffused image
     return [diffuse_image(image, noise_level) for noise_level in noise_levels]
+
 
 def diffuse_image_levels_sigmoid(image, levels, k=0.1, offset=0.5):
     """
@@ -147,7 +167,7 @@ def clear_and_create_directory(directory):
      print("Error occurred while deleting epoch images.")
 
 
-def save_reconstructed_images(epoch, batch_idx, reconstructed_images, lrate=None):
+def save_reconstructed_images(epoch, batch_idx, reconstructed_images, lrate=None, trialNum=0):
     plt.figure(figsize=(15, 3))
     for i, img in enumerate(reconstructed_images, 1):
         plt.subplot(1, 5, i)
@@ -157,7 +177,7 @@ def save_reconstructed_images(epoch, batch_idx, reconstructed_images, lrate=None
         plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}, Batch {batch_idx} and LR = {lrate}')
     else:
         plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}, Batch {batch_idx}')
-    plt.savefig(f'./training_plots/epoch{epoch+1}_batch_{batch_idx}.png')
+    plt.savefig(f'./training_plots/trial{trialNum}_epoch{epoch+1}_batch{batch_idx}.png')
     plt.close()
 
 

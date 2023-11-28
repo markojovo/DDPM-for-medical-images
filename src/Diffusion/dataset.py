@@ -23,7 +23,7 @@ class DiffusionDataset(Dataset):
                 input_image_path = os.path.join(folder, image_files[i + 1])
                 target_image_path = os.path.join(folder, image_files[i])
                 
-                # Extract the noise level from the filename (e.g., '000.jpg' -> 0.0)
+                # Extract the noise level from the filename (e.g., '000.png' -> 0.0)
                 #noise_level = float(image_files[i + 1].split('.')[0]) / 1000
                 noise_level = cosine_scaled_noise_level(image_files[i + 1].split('.')[0])
                 

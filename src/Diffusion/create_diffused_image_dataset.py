@@ -32,7 +32,7 @@ def process_image(image_file, source_folder, target_folder):
 
     # Save diffused images
     for level, diffused_image in enumerate(diffused_images):
-        save_path = os.path.join(image_folder, f"{str(level).zfill(3)}.jpg")
+        save_path = os.path.join(image_folder, f"{str(level).zfill(3)}.png")
         diffused_pil = transforms.ToPILImage()(diffused_image.squeeze(0))
         diffused_pil.save(save_path)
 
@@ -44,7 +44,7 @@ def create_diffused_dataset(source_folder, target_folder, run_images=None):
         os.makedirs(target_folder)
 
     # Get all jpg files from the source folder
-    image_files = [f for f in os.listdir(source_folder) if f.lower().endswith('.jpg')]
+    image_files = [f for f in os.listdir(source_folder) if f.lower().endswith('.png')]
     
     # If run_images is specified, slice the list to that length
     if run_images is not None:
