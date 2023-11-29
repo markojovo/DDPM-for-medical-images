@@ -6,9 +6,14 @@ import torchvision.transforms as transforms
 from util_functs import cosine_scaled_noise_level
 
 class DiffusionDataset(Dataset):
-    def __init__(self, directory, transform=None, num_images=None):
+    def __init__(self, directory, num_images=None):
         self.directory = directory
-        self.transform = transform if transform else transforms.ToTensor()
+
+        # Define the normalization and ToTensor transform
+        self.transform = transforms.Compose([
+            transforms.ToTensor(),  # Convert image to PyTorch tensor
+            transforms.Normalize(mean=[0.5146433], std=[0.279781*2.576])  # Normalize the image so that 99% of the probability lies within [-1,1] (2.576 stdevs "z" test) 
+        ])
 
         # List all image folders and optionally limit the number
         self.image_folders = [os.path.join(directory, f) for f in sorted(os.listdir(directory)) if os.path.isdir(os.path.join(directory, f))]
@@ -23,11 +28,8 @@ class DiffusionDataset(Dataset):
                 input_image_path = os.path.join(folder, image_files[i + 1])
                 target_image_path = os.path.join(folder, image_files[i])
                 
-                # Extract the noise level from the filename (e.g., '000.png' -> 0.0)
-                #noise_level = float(image_files[i + 1].split('.')[0]) / 1000
                 noise_level = cosine_scaled_noise_level(image_files[i + 1].split('.')[0])
                 
-                # Store the paths and noise level
                 self.images_info.append((input_image_path, target_image_path, noise_level))
 
     def __len__(self):
@@ -36,18 +38,16 @@ class DiffusionDataset(Dataset):
     def __getitem__(self, idx):
         input_image_path, target_image_path, noise_level = self.images_info[idx]
         
-        # Load the images on demand
         input_image = Image.open(input_image_path).convert('L')  # Convert to grayscale
         target_image = Image.open(target_image_path).convert('L')  # Convert to grayscale
 
-        # Apply the transform if any
-        if self.transform:
-            input_image = self.transform(input_image)
-            target_image = self.transform(target_image)
+        # Apply the transform
+        input_image = self.transform(input_image)
+        target_image = self.transform(target_image)
 
-        # Return the input image, noise level, and target image
         return input_image, torch.tensor([noise_level], dtype=torch.float32), target_image
 
 # Example usage
-# dataset = DiffusionDataset("../data/diffused_train/", transform=transforms.ToTensor())
+# mean, std = [0.5146433], [0.279781]  # Use your calculated mean and std
+# dataset = DiffusionDataset("../data/diffused_train/", num_images=100)
 # dataloader = DataLoader(dataset, batch_size=32, shuffle=True)

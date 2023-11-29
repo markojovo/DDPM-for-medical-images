@@ -21,7 +21,7 @@ def cosine_scaled_noise_level(noise_level):
     # Calculate the cosine-scaled noise level according to the schedule
     v_start = np.cos(s * np.pi / 2) ** (2 * tau)
     v_end = np.cos(e * np.pi / 2) ** (2 * tau)
-    t = (999 - noise_level) / 999  # Normalize noise level to [0, 1]
+    t = (999 - int(noise_level)) / 999  # Normalize noise level to [0, 1]
     output = np.cos((t * (e - s) + s) * np.pi / 2) ** (2 * tau)
     output = (output - v_start) / (v_end - v_start)
 
@@ -167,18 +167,21 @@ def clear_and_create_directory(directory):
      print("Error occurred while deleting epoch images.")
 
 
-def save_reconstructed_images(epoch, batch_idx, reconstructed_images, lrate=None, trialNum=0):
+def save_reconstructed_images(epoch, batch_idx, reconstructed_images, lrate=None, trialNum=None):
     plt.figure(figsize=(15, 3))
     for i, img in enumerate(reconstructed_images, 1):
         plt.subplot(1, 5, i)
-        plt.imshow(img.squeeze(0), cmap='gray')
+        # Use vmin and vmax to specify the data range for the colormap
+        plt.imshow(img.squeeze(0), cmap='gray', vmin=-0.71, vmax=0.67)
         plt.axis('off')
-    if lrate is not None:
+    if trialNum is not None:
         plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}, Batch {batch_idx} and LR = {lrate}')
+        plt.savefig(f'./training_plots/trial{trialNum}_epoch{epoch+1}_batch{batch_idx}.png')
     else:
         plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}, Batch {batch_idx}')
-    plt.savefig(f'./training_plots/trial{trialNum}_epoch{epoch+1}_batch{batch_idx}.png')
+        plt.savefig(f'./training_plots/epoch{epoch+1}_batch{batch_idx}.png')
     plt.close()
+
 
 
 

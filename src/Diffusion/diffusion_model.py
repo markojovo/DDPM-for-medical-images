@@ -116,5 +116,5 @@ class StepwiseReverseDiffusionNet(nn.Module):
         dec4 = self.dec4(dec3)
         
         # Final Activation
-        out = torch.sigmoid(dec4)
+        out = torch.tanh(dec4)
         return out
