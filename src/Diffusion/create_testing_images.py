@@ -51,7 +51,8 @@ sample_mean, sample_std = load_and_get_stats(sample_image_path)
 
 num_iterations = 250
 num_samples = 5
-output_folder = './imaging/created_images/'
+output_folder = '../../.github/workflows/generated_img/'
+#output_folder = './imaging/created_images/'
 
 # Create the output directory if it does not exist
 if not os.path.exists(output_folder):
