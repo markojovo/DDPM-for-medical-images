@@ -172,7 +172,7 @@ def save_reconstructed_images(epoch, batch_idx, reconstructed_images, lrate=None
     for i, img in enumerate(reconstructed_images, 1):
         plt.subplot(1, 5, i)
         # Use vmin and vmax to specify the data range for the colormap
-        plt.imshow(img.squeeze(0), cmap='gray', vmin=-0.71, vmax=0.67)
+        plt.imshow(img.squeeze(0), cmap='gray')#, vmin=-0.71, vmax=0.67)
         plt.axis('off')
     if trialNum is not None:
         plt.suptitle(f'Reconstructed Images at Epoch {epoch + 1}, Batch {batch_idx} and LR = {lrate}')

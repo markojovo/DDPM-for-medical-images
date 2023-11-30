@@ -3,6 +3,7 @@ from diffusion_model import StepwiseReverseDiffusionNet
 import matplotlib.pyplot as plt
 import imageio
 import os
+from util_functs import cosine_scaled_noise_level
 
 # Initialize the neural network and optimizer
 model = StepwiseReverseDiffusionNet()
@@ -25,7 +26,7 @@ if not os.path.exists(temp_folder):
 
 for i in range(num_iterations):
     # Calculate the current noise level and convert it to a tensor
-    current_noise_level = (999 - i) / 1000  # Adjusted to start from 0.999 to 0
+    current_noise_level = cosine_scaled_noise_level(999 - i)  # Adjusted to start from 0.999 to 0
     noise_level_tensor = torch.tensor([current_noise_level], dtype=torch.float32).unsqueeze(0).unsqueeze(0)
 
     # Forward pass with the current noise level
@@ -47,7 +48,7 @@ for i in range(num_iterations):
         images.append(f'{temp_folder}/plot_{i}.png')
 
 # Save the images as a GIF
-imageio.mimsave('reconstructed_plots.gif', [imageio.imread(img_file) for img_file in images], fps=2)
+imageio.mimsave('./imaging/reconstructed_plots.gif', [imageio.imread(img_file) for img_file in images], fps=2)
 
 # Clean up the temporary images
 for img_file in images:
