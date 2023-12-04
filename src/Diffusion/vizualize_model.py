@@ -9,28 +9,28 @@ def plot_custom_model_side_by_side():
     with dot.subgraph(name='cluster_encoder') as enc:
         enc.attr(rankdir='TB')  # Top to Bottom layout for the encoder
         enc.attr(label='Encoder')
-        enc.node('E1', 'EncoderBlock 1\nConv2D(1→64)\nBatchNorm2D\nSiLU\nSE-Attention')
-        enc.node('E2', 'EncoderBlock 2\nConv2D(64→128)\nBatchNorm2D\nSiLU\nSE-Attention')
-        enc.node('E3', 'EncoderBlock 3\nConv2D(128→256)\nBatchNorm2D\nSiLU\nSE-Attention')
-        enc.node('E4', 'EncoderBlock 4\nConv2D(256→512)\nBatchNorm2D\nSiLU\nSE-Attention')
+        enc.node('E1', 'EncoderBlock 1\nConv2D(1->64)\nBatchNorm2D\nSiLU\nSE-Attention')
+        enc.node('E2', 'EncoderBlock 2\nConv2D(64->128)\nBatchNorm2D\nSiLU\nSE-Attention')
+        enc.node('E3', 'EncoderBlock 3\nConv2D(128->256)\nBatchNorm2D\nSiLU\nSE-Attention')
+        enc.node('E4', 'EncoderBlock 4\nConv2D(256->512)\nBatchNorm2D\nSiLU\nSE-Attention')
         enc.edges([('E1', 'E2'), ('E2', 'E3'), ('E3', 'E4')])
 
     with dot.subgraph(name='cluster_decoder') as dec:
         dec.attr(rankdir='TB')  # Top to Bottom layout for the decoder
         dec.attr(label='Decoder')
-        dec.node('D1', 'DecoderBlock 1\nConvTrans2D(512→256)\nBatchNorm2D\nSiLU\nSE-Attention')
-        dec.node('D2', 'DecoderBlock 2\nConvTrans2D(512→128)\nBatchNorm2D\nSiLU\nSE-Attention')
-        dec.node('D3', 'DecoderBlock 3\nConvTrans2D(256→64)\nBatchNorm2D\nSiLU\nSE-Attention')
-        dec.node('D4', 'DecoderBlock 4\nConvTrans2D(128→1)\nBatchNorm2D\nSiLU\nSE-Attention')
+        dec.node('D1', 'DecoderBlock 1\nConvTrans2D(512->256)\nBatchNorm2D\nSiLU\nSE-Attention')
+        dec.node('D2', 'DecoderBlock 2\nConvTrans2D(512->128)\nBatchNorm2D\nSiLU\nSE-Attention')
+        dec.node('D3', 'DecoderBlock 3\nConvTrans2D(256->64)\nBatchNorm2D\nSiLU\nSE-Attention')
+        dec.node('D4', 'DecoderBlock 4\nConvTrans2D(128->1)\nBatchNorm2D\nSiLU\nSE-Attention')
         dec.edges([('D1', 'D2'), ('D2', 'D3'), ('D3', 'D4')])
 
     # Nodes for input, FiLM, and output
-    dot.node('I', 'Input\n1x128x128')
+    dot.node('I', 'Input\n1x128x128',shape='parallelogram')
     dot.node('F', 'FiLM\n512')
     dot.node('O', 'Output\nTanh')
 
     # Nodes for time representation
-    dot.node('T', 'Time\nRepresentation\nt', shape='parallelogram')
+    dot.node('T', 'Time\nRepresentation', shape='parallelogram')
 
     # Edges between encoder, FiLM, and decoder
     dot.edge('E4', 'F')
