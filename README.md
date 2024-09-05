@@ -2,6 +2,15 @@
 
 This repository contains my implementation of a Denoising Diffusion Probabilistic Model (DDPM) for generating medical images, specifically chest X-rays.
 
+The model is designed to predict an image $x_t$ given a very slightlier noisy version of the image $x_{t+1}$
+
+with the noise schedule $x_{t+1} := x_t (1 - \alpha_t) + \mathcal{N}(0, 1) \alpha_t$
+
+where $\alpha_t = \alpha(t)$, which follows a specific cosine gain noise schedule from 0 to 1
+
+i. e. a standard denoising diffusion neural network image generator.
+
+
 ## Overview
 
 - **Model**: DDPM with symmetric encoder-decoder architecture
