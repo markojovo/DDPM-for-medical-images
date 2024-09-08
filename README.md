@@ -2,7 +2,7 @@
 
 This repository contains my implementation of a Denoising Diffusion Probabilistic Model (DDPM) for generating medical images, specifically chest X-rays.
 
-The model is designed to predict an image $x_t$ given a very slightlier noisy version of the image $x_{t+1}$
+The model is designed to predict an image $x_t$ given a very slightly noisier version of the image $x_{t+1}$
 
 with the noise schedule $x_{t+1} := x_t (1 - \alpha_t) + \mathcal{N}(0, 1) \alpha_t$
 
